@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}새 프로젝트{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>새 프로젝트 생성</h1>
+    <form method="post">
+        <div class="mb-3">
+            <label for="name" class="form-label">프로젝트 이름</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">프로젝트 생성</button>
+        <a href="{{ url_for('todo.index') }}" class="btn btn-secondary">취소</a>
+    </form>
+</div>
+{% endblock %}

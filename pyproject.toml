@@ -1,0 +1,37 @@
+[project]
+name = "clean-architecture-with-python"
+version = "0.1.0"
+description = "Companion app for Clean Architecture with Python"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.1.8",
+    "flask>=3.1.0",
+    "freezegun>=1.5.1",
+    "pytest-random-order>=1.1.1",
+    "pytest-xdist>=3.6.1",
+    "python-dotenv>=1.0.1",
+    "sendgrid>=6.11.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-random-order>=1.1.1",
+]
+
+[tool.pytest.ini_options]
+# Only run tests from Chapter_10 by default (the main/latest chapter)
+# To run tests for a specific chapter, use: pytest Chapter_X/TodoApp/tests
+testpaths = ["Chapter_10/TodoApp/tests"]
+# Ignore test files in other chapters when running from root
+norecursedirs = [
+    "Chapter_2",
+    "Chapter_5",
+    "Chapter_6",
+    "Chapter_7",
+    "Chapter_8",
+    "Chapter_9",
+]
+# Use importlib import mode to avoid module conflicts
+addopts = "--import-mode=importlib"

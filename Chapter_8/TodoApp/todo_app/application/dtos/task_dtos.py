@@ -1,0 +1,207 @@
+"""
+이 모듈은 작업 관련 요청 및 응답 데이터 전송 객체(DTO)를 포함한다.
+이 DTO들은 외부 계층과 애플리케이션 코어 간의 데이터 변환을 처리한다.
+"""
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional, Self
+from uuid import UUID
+from dateutil import tz
+from datetime import timezone
+
+from todo_app.domain.entities.task import Task
+from todo_app.domain.value_objects import Deadline, Priority, TaskStatus
+
+
+# DTO(Data Transfer Object): 계층 간 데이터 전달을 위한 불변 객체
+# 요청 DTO는 외부 입력의 유효성 검사를, 응답 DTO는 도메인 데이터의 변환을 담당
+@dataclass(frozen=True)
+class CompleteTaskRequest:
+    """작업 완료를 위한 요청 데이터."""
+
+    task_id: str
+    completion_notes: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        """요청 데이터 유효성 검사"""
+        if not self.task_id.strip():
+            raise ValueError("작업 ID는 필수입니다")
+        if self.completion_notes and len(self.completion_notes) > 1000:
+            raise ValueError("완료 노트는 1000자를 초과할 수 없습니다")
+        try:
+            UUID(self.task_id)
+        except ValueError:
+            raise ValueError("잘못된 작업 ID 형식입니다")
+
+    def to_execution_params(self) -> dict:
+        """요청 데이터를 유스 케이스 매개변수로 변환한다."""
+        return {
+            "task_id": UUID(self.task_id),
+            "completion_notes": self.completion_notes,
+        }
+
+
+@dataclass
+class CreateTaskRequest:
+    """새 작업 생성을 위한 요청 데이터."""
+
+    title: str
+    description: str
+    due_date: Optional[str] = None
+    priority: Optional[str] = None
+    project_id: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        """요청 데이터 유효성 검사"""
+        if not self.title.strip():
+            raise ValueError("제목은 필수입니다")
+        if len(self.title) > 200:
+            raise ValueError("제목은 200자를 초과할 수 없습니다")
+        if len(self.description) > 2000:
+            raise ValueError("설명은 2000자를 초과할 수 없습니다")
+        if self.project_id:
+            try:
+                UUID(self.project_id)
+            except ValueError:
+                raise ValueError("잘못된 프로젝트 ID 형식입니다")
+
+    def to_execution_params(self) -> dict:
+        """요청 데이터를 유스 케이스 매개변수로 변환한다."""
+        params = {
+            "title": self.title.strip(),
+            "description": self.description.strip(),
+        }
+
+        if self.due_date:
+            # UTC 시간대 인식 datetime 생성
+            dt = datetime.fromisoformat(self.due_date)
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=tz.tzutc())
+            params["deadline"] = Deadline(dt)
+
+        if self.priority:
+            params["priority"] = Priority[self.priority.upper()]
+
+        if self.project_id:
+            params["project_id"] = UUID(self.project_id)
+
+        return params
+
+
+# 응답 DTO: 도메인 엔티티의 데이터를 외부 계층에 전달하기 위한 변환 객체
+# UUID를 문자열로 변환하는 등 경계 교차 시 필요한 데이터 형식 변환 담당
+@dataclass(frozen=True)
+class TaskResponse:
+    """도메인->애플리케이션 경계 교차를 위한 응답 데이터."""
+
+    id: str  # 경계 교차를 위한 UUID 변환 필요
+    title: str
+    description: str
+    status: TaskStatus
+    priority: Priority
+    project_id: str  # 경계 교차를 위한 UUID 변환 필요
+    due_date: Optional[datetime] = None
+    completion_date: Optional[datetime] = None
+    completion_notes: Optional[str] = None
+
+    @classmethod
+    def from_entity(cls, task: Task) -> Self:
+        """Task 엔터티로부터 응답을 생성한다."""
+        return cls(
+            id=str(task.id),  # 경계 교차를 위한 기본 변환
+            title=task.title,
+            description=task.description,
+            status=task.status,
+            priority=task.priority,
+            due_date=task.due_date.due_date if task.due_date else None,
+            project_id=str(task.project_id),
+            completion_date=task.completed_at,
+            completion_notes=task.completion_notes,
+        )
+
+
+@dataclass(frozen=True)
+class SetTaskPriorityRequest:
+    """작업 우선순위 업데이트를 위한 요청 데이터."""
+
+    task_id: str
+    priority: str
+
+    def __post_init__(self) -> None:
+        """요청 데이터 유효성 검사"""
+        if not self.task_id.strip():
+            raise ValueError("작업 ID는 필수입니다")
+
+        try:
+            priority_value = self.priority.strip().upper()
+            if not priority_value:
+                raise ValueError
+            if priority_value not in [p.name for p in Priority]:
+                raise ValueError
+        except (AttributeError, ValueError):
+            raise ValueError(f"우선순위는 다음 중 하나여야 합니다: {', '.join(p.name for p in Priority)}")
+        try:
+            UUID(self.task_id)
+        except ValueError:
+            raise ValueError("잘못된 작업 ID 형식입니다")
+
+    def to_execution_params(self) -> dict:
+        """요청 데이터를 유스 케이스 매개변수로 변환한다."""
+        return {
+            "task_id": UUID(self.task_id),
+            "priority": Priority[self.priority.upper()],
+        }
+
+
+@dataclass(frozen=True)
+class UpdateTaskRequest:
+    """작업 업데이트를 위한 요청 데이터."""
+
+    task_id: str
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    priority: Optional[Priority] = None
+    due_date: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        """요청 데이터 유효성 검사"""
+        if not self.task_id.strip():
+            raise ValueError("작업 ID는 필수입니다")
+        if self.title is not None:
+            if not self.title.strip():
+                raise ValueError("제목은 비어 있을 수 없습니다")
+            if len(self.title) > 200:
+                raise ValueError("제목은 200자를 초과할 수 없습니다")
+        if self.description is not None and len(self.description) > 2000:
+            raise ValueError("설명은 2000자를 초과할 수 없습니다")
+        if self.due_date:
+            try:
+                datetime.fromisoformat(self.due_date)
+            except ValueError:
+                raise ValueError("잘못된 마감일 형식입니다")
+
+    def to_execution_params(self) -> dict:
+        """요청 데이터를 유스 케이스 매개변수로 변환한다."""
+        params = {"task_id": UUID(self.task_id)}
+
+        if self.title is not None:
+            params["title"] = self.title.strip()
+        if self.description is not None:
+            params["description"] = self.description.strip()
+        if self.status is not None:
+            params["status"] = self.status
+        if self.priority is not None:
+            params["priority"] = self.priority
+        # due_date가 제공된 경우 항상 deadline을 params에 포함
+        if self.due_date is not None:
+            if self.due_date:  # 비어 있지 않은 문자열
+                dt = datetime.fromisoformat(self.due_date)
+                if not dt.tzinfo:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                params["deadline"] = Deadline(dt)
+            else:  # 빈 문자열 - 마감일 제거
+                params["deadline"] = None
+
+        return params

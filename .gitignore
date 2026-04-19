@@ -1,0 +1,17 @@
+/.idea/
+/.vscode/
+.DS_Store
+
+__pycache__
+.ipynb_checkpoints/
+
+app.txt
+
+repo_data/
+
+logs/
+
+.venv/
+
+# windsurf rules
+.windsurfrules

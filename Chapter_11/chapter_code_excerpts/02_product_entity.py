@@ -1,0 +1,26 @@
+# ──────────────────────────────────────────────────────────────
+# 1단계: 도메인 계층 - Product 엔티티
+# 레거시 컨트롤러에 흩어져 있던 재고 관리 로직을
+# 엔티티 내부에 캡슐화 ("묻지 말고 시켜라" 원칙 적용)
+# ──────────────────────────────────────────────────────────────
+from dataclasses import dataclass, field
+from uuid import UUID, uuid4
+
+
+# 제품 엔티티
+# 재고 차감 규칙(음수 방지, 초과 출고 방지)을 엔티티가 스스로 보장
+@dataclass
+class Product:
+    name: str
+    price: float
+    stock: int
+    id: UUID = field(default_factory=uuid4)
+
+    # 재고 차감 도메인 메서드
+    # 비즈니스 규칙: 양수 수량만 허용, 가용 재고 초과 시 예외 발생
+    def decrease_stock(self, quantity: int) -> None:
+        if quantity <= 0:
+            raise ValueError("수량은 양수여야 합니다")
+        if quantity > self.stock:
+            raise ValueError(f"재고가 부족합니다: 요청 수량 {quantity}, 가용 수량 {self.stock}")
+        self.stock -= quantity

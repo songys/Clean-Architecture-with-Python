@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">작업 편집</h5>
+            <a href="{{ url_for('todo.index') }}" class="btn btn-outline-secondary btn-sm">프로젝트 목록으로</a>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <div class="mb-3">
+                    <label for="title" class="form-label">제목</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ task.title }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">설명</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{{ task.description }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="priority" class="form-label">우선순위</label>
+                    <select class="form-select" id="priority" name="priority">
+                        <option value="LOW" {% if task.priority_display == 'LOW' %}selected{% endif %}>낮음</option>
+                        <option value="MEDIUM" {% if task.priority_display == 'MEDIUM' %}selected{% endif %}>보통</option>
+                        <option value="HIGH" {% if task.priority_display == 'HIGH' %}selected{% endif %}>높음</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="due_date" class="form-label">마감일</label>
+                    <input type="date" class="form-control" id="due_date" name="due_date" 
+                           value="{{ task.due_date_display.replace('기한 초과: ', '') if task.due_date_display else '' }}">
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('todo.index') }}" class="btn btn-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary">변경 사항 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
