@@ -48,6 +48,13 @@
 
 
 <details open>
+  <summary><h2> 도서 판매처)</summary>
+예스24: https://www.yes24.com/product/goods/188253761
+알라딘: https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=391560607
+교보문고: https://product.kyobobook.co.kr/detail/S000219800943
+</details>
+
+<details open>
   <summary><h2>프로젝트 구조</summary>
 코드는 장별로 구성되어 있다. 각 `Chapter_X` 폴더(예: `Chapter_1`, `Chapter_2`)는 해당 장이 끝난 시점의 애플리케이션 상태를 보여주는 스냅샷이다.
 
