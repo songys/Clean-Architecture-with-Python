@@ -47,12 +47,16 @@
 </details>
 
 
-<details open>
-  <summary><h2> 도서 판매처)</summary>
-- 예스24: https://www.yes24.com/product/goods/188253761      
-- 알라딘: https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=391560607      
-- 교보문고: https://product.kyobobook.co.kr/detail/S000219800943      
+<details>
+  <summary>📚 도서 판매처</summary>
+
+  <ul>
+    <li><a href="https://www.yes24.com/product/goods/188253761">예스24</a></li>
+    <li><a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=391560607">알라딘</a></li>
+    <li><a href="https://product.kyobobook.co.kr/detail/S000219800943">교보문고</a></li>
+  </ul>
 </details>
+
 
 <details open>
   <summary><h2>프로젝트 구조</summary>
